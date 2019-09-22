@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<script src="lib/index.mjs"></script>
+
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js"></script>
+	<script src="form.js"></script>
+
+
+</head>
+
+
+<body>
+<div id="app">
+
+	<br><br><br>
+	申请人：<input type="text" v-model="userId"/><br>
+	<!--邮箱：<input type="text" v-model="email"/><br>-->
+	手机号：<input type="text" v-model="mobile"/><br>
+	请假天数：<input type="text" v-model="leaveDay"/><br>
+	剩余小时：<input type="text" v-model="syLeaveDay" readonly/><br>
+	本月是否没有请假：<input type="text" v-model="notLeaveDay" readonly/><br>
+
+</div>
+
+</body>
+
+<script>
+
+	//表单数据
+	var formDatas = [
+		{
+			key: 'userId',
+			readonly: '',
+			hide: '',
+			required: '',
+			write2db: '',
+			watch: [{
+				//剩下的休假时间
+				expression: '$form.mobile == "1872222" ? "茂名卡" : "广州卡"',
+			}]
+		},
+		{
+			key: 'leaveDay', //想休假时间
+			readonly: '',
+			hide: '',
+			required: '',
+			write2db: '',
+			inputRules: [
+				{
+					ruleId: 'r001',
+					validateType: 'expr',
+					subType: '',
+					regularOrExpression: '$form.leaveDay <= getOwnLeaveDay()',
+					message: '你的休假时间超过了你的调休了'
+				}
+			],
+			watch: [
+				// 	{
+				// 	//剩下的休假时间
+				// 	expression: '$form.leaveDay - $form.syLeaveDay',
+				// }
+			]
+		},
+		{
+			key: 'syLeaveDay',//剩余休假时间
+			readonly: 'true',
+			hide: '',
+			required: '',
+			write2db: '',
+			inputRules: [],
+			value: [],
+			watch: [
+				{
+					//剩下的休假时间
+					expression: 'getOwnLeaveDay() - ($form.leaveDay*8)',
+				}, {
+					//剩下的休假时间
+					expression: 'concat((getOwnLeaveDay() - ($form.leaveDay*8)), " --- " , $form.mobile)',
+				}
+
+			]
+		},
+		{
+			key: 'notLeaveDay',//剩余休假时间
+			readonly: 'true',
+			hide: '',
+			required: '',
+			write2db: '',
+			inputRules: [],
+			value: [],
+			watch: [
+				// 	{
+				// 	//剩下的休假时间
+				// 	expression: '$form.leaveDay <= 0',
+				// }
+			]
+		},
+		{
+			key: 'mobile',//剩余休假时间
+			readonly: '',
+			hide: '',
+			required: '',
+			write2db: '',
+			inputRules: [],
+			value: [],
+			watch: [
+				// 	{
+				// 	//剩下的休假时间
+				// 	expression: '$form.syLeaveDay <= 0 ? "18718821766" : "13160879541"',
+				// }
+			]
+		}
+	];
+
+	var _data;
+
+	var app = new Vue({
+		el: '#app',
+		data: function () {
+			//TODO 这里其实需要动态表单的支持
+			var d = _data = {};
+			_.forEach(formDatas, function (v, k) {
+				d[v.key] = '';
+			});
+
+			return d;
+		},
+		// 这是新增的方法
+		methods: {},
+		computed: {}
+	});
+
+
+	var parser = form.parser();
+
+	//注册需要监听的对象
+	_.forEach(_data, function (v, k) {
+		let _k = k;
+		app.$watch(_k, function (newValue, oldValue) {
+			handel(_k, newValue);
+		});
+	});
+
+	let init = false;
+	let allFormFieldExpression;
+	let allNoticeFormKey;
+
+
+	var handel = function (field, newValue) {
+		//TODO 有环形调用 bug 未修复
+
+		let fff = {
+			$form: _data,
+		};
+
+		if (!init) {
+			//获取到每个字段需要关联的字段
+			allFormFieldExpression = form.parseFormFieldExpression(formDatas);
+			console.log(allFormFieldExpression);
+
+			allNoticeFormKey = form.parseNoticeFormKey(allFormFieldExpression);
+			console.log(allNoticeFormKey);
+			init = true;
+		}
+
+		let currentFieldNoticeFormKey = allNoticeFormKey[field];
+		if (currentFieldNoticeFormKey == null) {
+			return;
+		}
+
+		//需要被通知的字段
+		_.forEach(currentFieldNoticeFormKey, function (v, index) {
+			//字段的配置
+			let config = form.utils.getConfig(formDatas, v);
+			let currentFormFieldExpression = allFormFieldExpression[v];
+
+			//这里要判断这个字段需要触发的动作，比如说显示、隐藏、只读、赋值等
+			//隐藏
+			// hasField2Run(v, currentFormFieldExpression.hide, field, fff);
+			//
+			// //只读
+			// hasField2Run(currentFormFieldExpression.readonly, field, fff);
+			// //必填
+			// hasField2Run(currentFormFieldExpression.required, field, fff);
+			//
+			// //输入格式验证
+			// hasField2Run(currentFormFieldExpression.inputRule, field, fff);
+
+			//这里要判断当前这个字段是否需要触发
+			form.handle.watchTrigger(field, v, currentFormFieldExpression.watch, form.utils.getWatchExpressionList(config.watch), fff);
+
+		});
+	};
+
+
+</script>
+
+</html>
