@@ -1,0 +1,36 @@
+a {
+    /*font: 11px system-ui;*/
+    border: 1px solid gray;
+    border-radius: 3px;
+    /*margin: 6px 4px 6px 4px;*/
+    /*padding: 0px 4px 0px 4px;*/
+
+    -webkit-user-modify: read-only;
+    background-color: gainsboro;
+    white-space: nowrap;
+}
+
+a.symbol {
+    font: 11px system-ui;
+    background-color: #b1f7e6;
+}
+
+div.panel {
+    width: 348px;
+    height: 300px;
+    border: 1px solid gray;
+    /*overflow: auto;*/
+}
+
+li {
+    list-style-type: none;
+}
+
+ul {
+    padding-inline-start: 0px;
+    margin-block-start: 0px;
+}
+
+li:hover {
+    background-color: gainsboro;
+}

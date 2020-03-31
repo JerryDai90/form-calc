@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+
+    <script src="../lib/index.js"></script>
+    <script src="js/expr-utils.js"></script>
+    <!--<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js"></script>-->
+
+    <link rel="stylesheet" href="css/main.css"/>
+</head>
+
+
+<body>
+
+
+<div contenteditable="true" id="test" style="height: 200px;width: 700px; border: 1px solid gray;"
+     onclick="getCursortPosition(event);" onkeyup="getCursortPosition(event);"></div>
+
+
+<div style="width: 700px;">
+    <div class="panel" style="float: left;">
+        <!--<div>-->
+        <!--<a style="float: left;">字段</a>-->
+        <!--<a style="float: right;">流程</a>-->
+        <!--</div>-->
+        <div style="overflow: auto; height: 280px; width: 100%;">
+
+            <ul>
+                <li name="fields" value="$sys.user">申请人</li>
+                <li name="fields" value="$sys.commitUser">提交人</li>
+                <li name="fields" value="$sys.a">字段A</li>
+                <li name="fields" value="$sys.b">字段B</li>
+                <li name="fields" value="$sys.c">字段C</li>
+                <li name="fields" value="$sys.d">字段D</li>
+                <li name="fields" value="$sys.e">字段E</li>
+                <li name="fields" value="$sys.f">字段F</li>
+                <li name="fields" value="$sys.g">字段G</li>
+                <li name="fields" value="$sys.h">字段H</li>
+                <li name="fields" value="$sys.i">字段I</li>
+                <li name="fields" value="$sys.j">字段J</li>
+                <li name="fields" value="$sys.k">字段K</li>
+                <li name="fields" value="$sys.l">字段L</li>
+                <li name="fields" value="$sys.m">字段M</li>
+            </ul>
+
+        </div>
+    </div>
+
+    <div class="panel" style="float: right;">
+        算术运算符：<br>
+        <button name="operator" value="+" class="symbol"> + </button>
+        <button name="operator" value="-" class="symbol"> - </button>
+        <button name="operator" value="*" class="symbol"> × </button>
+        <button name="operator" value="/" class="symbol"> ÷ </button>
+
+        <button name="operator" value="(" class="symbol"> ( </button>
+        <button name="operator" value=")" class="symbol"> ) </button>
+
+        <br><br>
+        逻辑运算符：<br>
+        <button name="operator" value=">" class="symbol"> > </button>
+        <button name="operator" value=">=" class="symbol"> >= </button>
+        <button name="operator" value="<" class="symbol"> < </button>
+        <button name="operator" value="<=" class="symbol"> <= </button>
+        <button name="operator" value="!=" class="symbol"> != </button>
+        <button name="operator" value="==" class="symbol"> == </button>
+
+
+
+        <br>
+        <button name="operator" value="and" class="symbol"> and </button>
+        <button name="operator" value="or" class="symbol"> or </button>
+        <button name="operator" value="in" class="symbol"> in </button>
+        <button name="operator" value="not" class="symbol"> not </button>
+
+        <br><br>
+        函数：<br>
+        <button value="like" class="symbol"> 包含</button>
+        <button value="not_like" class="symbol"> 不包含</button>
+
+        <br>
+        <button value="choose-user" class="symbol"> 选择用户</button>
+        <button value="choose-department" class="symbol"> 选择部门</button>
+
+        <br><br>
+        自定义函数：<br>
+
+        <button name="operator" handletype="print" value="like( , )" class="symbol"> like() </button>
+        <button name="operator" handletype="print" value="concat( , )" class="symbol"> concat() </button>
+
+
+        <br><br>
+        测试选择选人后：
+        <button name="operator" value="'zs;ls;ww'" class="symbol">张三、李四、王五</button>
+
+    </div>
+
+</div>
+
+<br>
+<br><br>
+
+<br>
+
+<button id="get">计算</button>
+<button name="setVal" >设置值</button>
+
+<br><br>
+测试使用表达式：<br>
+<button name="setVal" value='like(&nbsp;&nbsp;<a value="&apos;zs;ls;ww&apos;">张三、李四、王五</a>&nbsp;,&nbsp;&nbsp;<a value="$sys.user">申请人</a>&nbsp; )'>选人后的表达式</button>
+<button name="setVal" value='like(&nbsp;&nbsp;<a value="&apos;zs;ls;ww&apos;">张三、李四、王五</a>&nbsp;,&nbsp;&nbsp;"ww"&nbsp; )'>选人后的表达式2</button>
+
+
+
+
+<button id="clear">重置</button>
+<br><br>
+
+
+解析表达式：<textarea id="value" rows="5" style="width: 400px" readonly></textarea>
+<br>
+计算结果：　<textarea id="v1" rows="5" style="width: 400px" readonly></textarea>
+<br>
+数据对象：　<textarea id="map" rows="7" style="width: 400px">
+{
+    $sys :   {
+        user: "ww",
+            commitUser : "4",
+            currTime  : new Date().getTime()
+        }
+}
+</textarea>
+
+
+</body>
+
+<script>
+
+    let pos = 0;
+
+    /**
+     * html 转换成表达式
+     * @param _htmlExpr
+     * @returns {*}
+     */
+
+    const updatePos = function (addHtmlData) {
+        pos += addHtmlData.replace(/(<a\s*value="[\$]?\w*\W[.]?\w*">)|(<\/a>)/g, "").length;
+    }
+
+
+    function getCursortPosition(e) {
+        var eleP = e.target.parentNode; //获取父级元素
+        // var pos = 0;
+        if (e.target.nodeName == "DIV") {
+            pos = getDivPosition(e.target);
+        } else {
+            pos = getPosition(e.target);
+        }
+
+
+        // var spanEle = (eleP.childNodes)[7];
+        // spanEle.innerText = pos;
+    }
+
+    //可编辑div获取坐标
+    const getDivPosition = function (element) {
+        var caretOffset = 0;
+        var doc = element.ownerDocument || element.document;
+        var win = doc.defaultView || doc.parentWindow;
+        var sel;
+        if (typeof win.getSelection != "undefined") {//谷歌、火狐
+            sel = win.getSelection();
+            if (sel.rangeCount > 0) {//选中的区域
+                var range = win.getSelection().getRangeAt(0);
+                var preCaretRange = range.cloneRange();//克隆一个选中区域
+                preCaretRange.selectNodeContents(element);//设置选中区域的节点内容为当前节点
+                preCaretRange.setEnd(range.endContainer, range.endOffset);  //重置选中区域的结束位置
+                caretOffset = preCaretRange.toString().length;
+            }
+        } else if ((sel = doc.selection) && sel.type != "Control") {//IE
+            var textRange = sel.createRange();
+            var preCaretTextRange = doc.body.createTextRange();
+            preCaretTextRange.moveToElementText(element);
+            preCaretTextRange.setEndPoint("EndToEnd", textRange);
+            caretOffset = preCaretTextRange.text.length;
+        }
+        return caretOffset;
+    }
+
+
+    $(function () {
+
+        var setObjectToDiv = function (_this) {
+            const handleType = $(_this).attr("handletype");
+
+            var val = $(_this).attr("value");
+            var clazz = $(_this).attr("class");
+
+            var html = $(_this).html();
+
+            var cStr = "";//clazz == undefined ? "" : "class=" + clazz ;
+
+            var v = "";
+            v = "&nbsp;"+val+"&nbsp;";
+            if( handleType == "print" ){
+
+            }else{
+                v = '&nbsp;<a ' + cStr + ' value="' + val + '">' + html + '</a>&nbsp;';
+            }
+
+            $("#test").html($("#test").html()+v);
+        }
+
+        var runExpr = function (exprStr, data) {
+            var _parser = new Parser();
+
+            _parser.functions.concat = function (...obj) {
+                let str = '';
+                for (var x = 0; obj.length > x; x++) {
+                    str += obj[x];
+                }
+                return str;
+            };
+
+
+            _parser.functions.like = function (src, target) {
+
+                let slist = src.split(";");
+
+                return slist.indexOf(target) != -1;
+            };
+
+
+            let expr = _parser.parse(exprStr);
+
+            var mapObj = eval("x=" + data);
+            return expr.evaluate(mapObj);
+        }
+
+
+        $("[name=fields]").dblclick(function () {
+            setObjectToDiv(this);
+        });
+
+
+        $("[name=operator]").click(function () {
+            setObjectToDiv(this);
+        });
+
+        $("[name=custMethod]").click(function () {
+            setObjectToDiv(this);
+        });
+
+
+
+        $("#get").click(function () {
+            var html = $("#test").html();
+
+            html = html.replace(/\&nbsp;/g, " ");
+
+            const expression = parseHtmlToExpression(html);
+
+            $("#value").val(expression);
+
+            $("#v1").val(runExpr(expression, $("#map").val()));
+
+        });
+
+        $("[name=setVal]").click(function () {
+            //"concat(&nbsp;<a value=\"$sys.currTime\">当前时间</a>&nbsp;,\"-----\",&nbsp;<a value=\"$sys.commitUser\">提交人</a>&nbsp;) != \"\""
+
+            $("#test").html($(this).attr("value"));
+        });
+
+        $("#clear").click(function () {
+            $("#test").html("");
+        });
+
+
+        $("#test").blur(function () {
+            getCursortPosition();
+        });
+
+    });
+
+
+</script>
+
+</html>
