@@ -10,6 +10,7 @@
 
 可视化的表达式配置，如图
 
-![](http://img.lsof.fun/2020-04-01-Kapture 2020-04-01 at 23.40.23.gif)
+![Kapture2020-04-01](http://img.lsof.fun/2020-04-01-Kapture2020-04-01.gif)
+
 
 
